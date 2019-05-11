@@ -438,13 +438,13 @@ static void int64_to_str(int64_t val, char *buf, const size_t buflen)
 
 	(void)memset(buf, 0, buflen);
 
-	if (pos_val < 100000LL) {
+	if (pos_val < 1000000LL) {
 		s = v;
 		unit = ' ';
-	} else if (pos_val < 100000000LL) {
+	} else if (pos_val < 1000000000LL) {
 		s = v / 1000.0;
 		unit = 'k';
-	} else if (pos_val < 100000000000LL) {
+	} else if (pos_val < 1000000000000LL) {
 		s = v / 1000000.0;
 		unit = 'M';
 	} else {
