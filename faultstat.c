@@ -431,26 +431,26 @@ static inline unsigned int OPTIMIZE3 HOT count_bits(const unsigned int val)
 static void int64_to_str(int64_t val, char *buf, const size_t buflen)
 {
 	double s;
-	const double v = (double)val;
-	int64_t abs_val = val < 0 ? -val : val;
+	int64_t pos_val = val < 0 ? 0 : val;
+	const double v = (double)pos_val;
 	char unit;
 
 	(void)memset(buf, 0, buflen);
 
-	if (abs_val < 10 * 1000) {
+	if (pos_val < 100000LL) {
 		s = v;
 		unit = ' ';
-	} else if (abs_val < 10000000LL) {
+	} else if (pos_val < 100000000LL) {
 		s = v / 1000.0;
 		unit = 'k';
-	} else if (abs_val < 10000000000LL) {
+	} else if (pos_val < 100000000000LL) {
 		s = v / 1000000.0;
 		unit = 'M';
 	} else {
 		s = v / 1000000000.0;
 		unit = 'G';
 	}
-	(void)snprintf(buf, buflen, "%8.1f%c", s, unit);
+	(void)snprintf(buf, buflen, "%7.0f%c", s, unit);
 }
 
 /*
@@ -1065,10 +1065,10 @@ static int fault_dump(
 	}
 
 	if (one_shot) {
-		df.df_printf(" %*.*s     Major     Minor User       Command\n",
+		df.df_printf(" %*.*s   Major    Minor  User       Command\n",
 			pid_size, pid_size, "PID");
 	} else {
-		df.df_printf(" %*.*s     Major     Minor    +Major    +Minor %sUser       Command\n",
+		df.df_printf(" %*.*s   Major    Minor   +Major   +Minor  %sUser       Command\n",
 			pid_size, pid_size, "PID",
 			opt_flags & OPT_ARROW ? "D " : "");
 	}
@@ -1083,14 +1083,14 @@ static int fault_dump(
 		int64_to_str(fault_info->maj_fault, s_maj_fault, sizeof(s_maj_fault));
 		int64_to_str(fault_info->min_fault, s_min_fault, sizeof(s_min_fault));
 		if (one_shot) {
-			df.df_printf(" %*d %9s %9s %-10.10s %s\n",
+			df.df_printf(" %*d %8s %8s %-10.10s %s\n",
 				pid_size, fault_info->pid,
 				s_maj_fault, s_min_fault,
 				uname_name(fault_info->uname), cmd);
 		} else {
 			int64_to_str(fault_info->d_maj_fault, s_d_maj_fault, sizeof(s_d_maj_fault));
 			int64_to_str(fault_info->d_min_fault, s_d_min_fault, sizeof(s_d_min_fault));
-			df.df_printf(" %*d %9s %9s %9s %9s %s%-10.10s %s\n",
+			df.df_printf(" %*d %8s %8s %8s %8s %s%-10.10s %s\n",
 				pid_size, fault_info->pid,
 				s_maj_fault, s_min_fault, s_d_maj_fault, s_d_min_fault,
 				one_shot ? " " :
@@ -1102,11 +1102,11 @@ static int fault_dump(
 	int64_to_str(t_maj_fault, s_maj_fault, sizeof(s_maj_fault));
 	int64_to_str(t_min_fault, s_min_fault, sizeof(s_min_fault));
 	if (one_shot) {
-		df.df_printf("Total: %9s %9s\n\n", s_maj_fault, s_min_fault);
+		df.df_printf("Total: %8s %8s\n\n", s_maj_fault, s_min_fault);
 	} else {
 		int64_to_str(t_d_maj_fault, s_d_maj_fault, sizeof(s_d_maj_fault));
 		int64_to_str(t_d_min_fault, s_d_min_fault, sizeof(s_d_min_fault));
-		df.df_printf("Total: %9s %9s %9s %9s\n\n", 
+		df.df_printf("Total: %8s %8s %8s %8s\n\n", 
 			s_maj_fault, s_min_fault, s_d_maj_fault, s_d_min_fault);
 	}
 
@@ -1174,7 +1174,7 @@ static int fault_dump_diff(
 		fault_info->maj_fault = 0;
 	}
 
-	df.df_printf(" %*.*s     Major     Minor    +Major    +Minor User       Command\n",
+	df.df_printf(" %*.*s   Major    Minor   +Major   +Minor  User       Command\n",
 		pid_size, pid_size, "PID");
 	for (fault_info = sorted_deltas; fault_info; ) {
 		const char *cmd = get_cmdline(fault_info);
@@ -1185,7 +1185,7 @@ static int fault_dump_diff(
 		int64_to_str(fault_info->d_maj_fault, s_d_maj_fault, sizeof(s_d_maj_fault));
 		int64_to_str(fault_info->d_min_fault, s_d_min_fault, sizeof(s_d_min_fault));
 
-		df.df_printf(" %*d %9s %9s %9s %9s %-10.10s %s\n",
+		df.df_printf(" %*d %8s %8s %8s %8s %-10.10s %s\n",
 			pid_size, fault_info->pid,
 			s_maj_fault, s_min_fault, s_d_maj_fault, s_d_min_fault,
 			uname_name(fault_info->uname), cmd);
@@ -1198,7 +1198,7 @@ static int fault_dump_diff(
 	int64_to_str(t_min_fault, s_min_fault, sizeof(s_min_fault));
 	int64_to_str(t_d_maj_fault, s_d_maj_fault, sizeof(s_d_maj_fault));
 	int64_to_str(t_d_min_fault, s_d_min_fault, sizeof(s_d_min_fault));
-	df.df_printf("Total: %9s %9s %9s %9s\n\n", 
+	df.df_printf("Total: %8s %8s %8s %8s\n\n", 
 		s_maj_fault, s_min_fault, s_d_maj_fault, s_d_min_fault);
 
 	return 0;
