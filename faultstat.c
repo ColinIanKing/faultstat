@@ -1320,7 +1320,7 @@ int main(int argc, char **argv)
 	df = df_normal;
 
 	for (;;) {
-		int c = getopt(argc, argv, "acCdghklmo:p:qstT");
+		int c = getopt(argc, argv, "acdhlp:stT");
 
 		if (c == -1)
 			break;
