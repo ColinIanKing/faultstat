@@ -432,7 +432,7 @@ static inline unsigned int OPTIMIZE3 HOT count_bits(const unsigned int val)
 static void int64_to_str(int64_t val, char *buf, const size_t buflen)
 {
 	double s;
-	int64_t pos_val = val < 0 ? 0 : val;
+	const int64_t pos_val = val < 0 ? 0 : val;
 	const double v = (double)pos_val;
 	char unit;
 
@@ -559,7 +559,7 @@ static bool pid_exists(const pid_t pid)
  */
 static inline unsigned long proc_cache_hash_pid(const pid_t pid)
 {
-	unsigned long h = (unsigned long)pid;
+	const unsigned long h = (unsigned long)pid;
 
 	return h % PROC_HASH_TABLE_SIZE;
 }
@@ -599,10 +599,9 @@ static proc_info_t *proc_cache_add_at_hash_index(
  */
 static proc_info_t *proc_cache_find_by_pid(const pid_t pid)
 {
-	unsigned long h;
+	const unsigned long h = proc_cache_hash_pid(pid);
 	proc_info_t *p;
 
-	h = proc_cache_hash_pid(pid);
 	for (p = proc_cache_hash[h]; p; p = p->next)
 		if (p->pid == pid)
 			return p;
@@ -679,7 +678,7 @@ static double gettime_to_double(void)
 
 static inline unsigned long hash_uid(const uid_t uid)
 {
-        unsigned long h = (unsigned long)uid;
+        const unsigned long h = (unsigned long)uid;
 
         return h % UNAME_HASH_TABLE_SIZE;
 }
@@ -692,7 +691,7 @@ static uname_cache_t *uname_cache_find(const uid_t uid)
 {
 	struct passwd *pw;
 	uname_cache_t *uname;
-	unsigned long h = hash_uid(uid);
+	const unsigned long h = hash_uid(uid);
 
 	for (uname = uname_cache[h]; uname; uname = uname->next) {
 		if (uname->uid == uid)
@@ -777,7 +776,7 @@ static fault_info_t *fault_cache_alloc(void)
  *	free a fault_info_t by just adding it to the
  *	fault_info_cache free list
  */
-static void fault_cache_free(fault_info_t * const fault_info)
+static inline void fault_cache_free(fault_info_t * const fault_info)
 {
 	fault_info->next = fault_info_cache;
 	fault_info_cache = fault_info;
@@ -1217,9 +1216,9 @@ static void handle_sig(int dummy)
  */
 static void pid_list_cleanup(void)
 {
-	pid_list_t *p;
+	pid_list_t *p = pids;
 
-	for (p = pids; p; ) {
+	while (p) {
 		pid_list_t *next = p->next;
 		if (p->name)
 			free(p->name);
