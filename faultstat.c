@@ -80,9 +80,10 @@ typedef struct fault_info_t {
 
 	int64_t		min_fault;	/* minor page faults */
 	int64_t		maj_fault;	/* major page faults */
+	int64_t		vm_swap;	/* pages swapped */
 	int64_t		d_min_fault;	/* delta in minor page faults */
 	int64_t		d_maj_fault;	/* delta in major page faults */
-	
+
 	struct fault_info_t *d_next;	/* sorted deltas by total */
 	struct fault_info_t *s_next;	/* sorted by total */
 	struct fault_info_t *next;	/* for free list */
@@ -450,7 +451,7 @@ static void int64_to_str(int64_t val, char *buf, const size_t buflen)
 		s = v / 1000000000.0;
 		unit = 'G';
 	}
-	(void)snprintf(buf, buflen, "%7.0f%c", s, unit);
+	(void)snprintf(buf, buflen, "%6.0f%c", s, unit);
 }
 
 /*
@@ -747,26 +748,6 @@ static void uname_cache_cleanup(void)
 }
 
 /*
- *  fault_get_entry()
- *	parse page fault info
- */
-static inline int fault_get_entry(
-	FILE * const fp,
-	fault_info_t * const fault_info)
-{
-	unsigned long min_fault, maj_fault;
-	int n;
-
-	n = fscanf(fp, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %lu %*u %lu",
-		&min_fault, &maj_fault);
-	if (n == 2) {
-		fault_info->min_fault = min_fault;
-		fault_info->maj_fault = maj_fault;
-	}
-	return 0;
-}
-
-/*
  *  fault_cache_alloc()
  *	allocate a fault_info_t, first try the cache of
  *	unused fault_info's, if none available fall back
@@ -856,10 +837,13 @@ static void fault_cache_cleanup(void)
 static int fault_get_by_proc(const pid_t pid, fault_info_t ** const fault_info)
 {
 	FILE *fp;
-	char path[PATH_MAX];
-	char buffer[4096];
-	fault_info_t *new_fault;
+	fault_info_t *new_fault_info;
 	proc_info_t *proc;
+	unsigned long min_fault, maj_fault, vm_swap;
+	int n;
+	char buffer[4096];
+	char path[PATH_MAX];
+	int got_fields = 0;
 
 	if (getpgid(pid) == 0)
 		return 0;	/* Kernel thread */
@@ -884,30 +868,26 @@ static int fault_get_by_proc(const pid_t pid, fault_info_t ** const fault_info)
 			return 0;
 	}
 
-	(void)snprintf(path, sizeof(path), "/proc/%i/stat", pid);
-	if ((fp = fopen(path, "r")) == NULL)
-		return 0;	/* Gone away? */
-
-	if ((new_fault = fault_cache_alloc()) == NULL)
+	if ((new_fault_info = fault_cache_alloc()) == NULL)
 		return -1;
 
-	errno = 0;
-	fault_get_entry(fp, new_fault);
-
-	/* Can't read it, no access rights? */
-	if (errno == EACCES) {
-		(void)fclose(fp);
-		return 0;
+	(void)snprintf(path, sizeof(path), "/proc/%i/stat", pid);
+	if ((fp = fopen(path, "r")) == NULL)
+		return -1;	/* Gone? */
+	n = fscanf(fp, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %lu %*u %lu",
+		&min_fault, &maj_fault);
+	if (n == 2) {
+		new_fault_info->min_fault = min_fault;
+		new_fault_info->maj_fault = maj_fault;
 	}
 	(void)fclose(fp);
 
-
-	new_fault->pid = pid;
-	new_fault->proc = proc_cache_find_by_pid(pid);
-	new_fault->uid = 0;
-	new_fault->uname = NULL;
-	new_fault->next = *fault_info;
-	*fault_info = new_fault;
+	new_fault_info->pid = pid;
+	new_fault_info->proc = proc_cache_find_by_pid(pid);
+	new_fault_info->uid = 0;
+	new_fault_info->uname = NULL;
+	new_fault_info->next = *fault_info;
+	*fault_info = new_fault_info;
 
 	(void)snprintf(path, sizeof(path), "/proc/%i/status", pid);
 	if ((fp = fopen(path, "r")) == NULL)
@@ -921,16 +901,22 @@ static int fault_get_by_proc(const pid_t pid, fault_info_t ** const fault_info)
 	 *  the NULL uname cases.
 	 */
 	while (fgets(buffer, sizeof(buffer), fp) != NULL) {
-		if (!strncmp(buffer, "Uid:", 4)) {
-			if (sscanf(buffer + 5, "%9i", &new_fault->uid) == 1) {
-				new_fault->uname = uname_cache_find(new_fault->uid);
-				if (new_fault->uname == NULL) {
+		if (!strncmp(buffer, "VmSwap:", 7)) {
+			if (sscanf(buffer + 8, "%lu", &vm_swap) == 1)
+				new_fault_info->vm_swap = vm_swap;
+			got_fields++;
+		} else if (!strncmp(buffer, "Uid:", 4)) {
+			if (sscanf(buffer + 5, "%9i", &new_fault_info->uid) == 1) {
+				new_fault_info->uname = uname_cache_find(new_fault_info->uid);
+				if (new_fault_info->uname == NULL) {
 					(void)fclose(fp);
 					return -1;
 				}
-				break;
 			}
+			got_fields++;
 		}
+		if (got_fields == 2)
+			break;
 	}
 	(void)fclose(fp);
 
@@ -1019,7 +1005,9 @@ static int fault_dump(
 	int64_t	t_min_fault = 0, t_maj_fault = 0;
 	int64_t	t_d_min_fault = 0, t_d_maj_fault = 0;
 	const int pid_size = pid_max_digits();
-	char s_min_fault[12], s_maj_fault[12], s_d_min_fault[12], s_d_maj_fault[12];
+	char s_min_fault[12], s_maj_fault[12],
+	     s_d_min_fault[12], s_d_maj_fault[12],
+	     s_vm_swap[12];
 
 	for (fault_info = fault_info_new; fault_info; fault_info = fault_info->next) {
 		fault_delta(fault_info, fault_info_old);
@@ -1065,10 +1053,10 @@ static int fault_dump(
 	}
 
 	if (one_shot) {
-		df.df_printf(" %*.*s   Major    Minor  User       Command\n",
+		df.df_printf(" %*.*s  Major   Minor    Swap  User       Command\n",
 			pid_size, pid_size, "PID");
 	} else {
-		df.df_printf(" %*.*s   Major    Minor   +Major   +Minor  %sUser       Command\n",
+		df.df_printf(" %*.*s  Major   Minor  +Major  +Minor    Swap  %sUser       Command\n",
 			pid_size, pid_size, "PID",
 			opt_flags & OPT_ARROW ? "D " : "");
 	}
@@ -1082,17 +1070,20 @@ static int fault_dump(
 
 		int64_to_str(fault_info->maj_fault, s_maj_fault, sizeof(s_maj_fault));
 		int64_to_str(fault_info->min_fault, s_min_fault, sizeof(s_min_fault));
+		int64_to_str(fault_info->vm_swap, s_vm_swap, sizeof(s_vm_swap));
 		if (one_shot) {
-			df.df_printf(" %*d %8s %8s %-10.10s %s\n",
+			df.df_printf(" %*d %7s %7s %7s %-10.10s %s\n",
 				pid_size, fault_info->pid,
-				s_maj_fault, s_min_fault,
+				s_maj_fault, s_min_fault, s_vm_swap,
 				uname_name(fault_info->uname), cmd);
 		} else {
 			int64_to_str(fault_info->d_maj_fault, s_d_maj_fault, sizeof(s_d_maj_fault));
 			int64_to_str(fault_info->d_min_fault, s_d_min_fault, sizeof(s_d_min_fault));
-			df.df_printf(" %*d %8s %8s %8s %8s %s%-10.10s %s\n",
+			df.df_printf(" %*d %7s %7s %7s %7s %7s %s%-10.10s %s\n",
 				pid_size, fault_info->pid,
-				s_maj_fault, s_min_fault, s_d_maj_fault, s_d_min_fault,
+				s_maj_fault, s_min_fault,
+				s_d_maj_fault, s_d_min_fault,
+				s_vm_swap,
 				one_shot ? " " :
 				opt_flags & OPT_ARROW ? arrow : "",
 				uname_name(fault_info->uname), cmd);
@@ -1102,11 +1093,11 @@ static int fault_dump(
 	int64_to_str(t_maj_fault, s_maj_fault, sizeof(s_maj_fault));
 	int64_to_str(t_min_fault, s_min_fault, sizeof(s_min_fault));
 	if (one_shot) {
-		df.df_printf("Total: %8s %8s\n\n", s_maj_fault, s_min_fault);
+		df.df_printf("Total: %7s %7s\n\n", s_maj_fault, s_min_fault);
 	} else {
 		int64_to_str(t_d_maj_fault, s_d_maj_fault, sizeof(s_d_maj_fault));
 		int64_to_str(t_d_min_fault, s_d_min_fault, sizeof(s_d_min_fault));
-		df.df_printf("Total: %8s %8s %8s %8s\n\n", 
+		df.df_printf("Total: %7s %7s %7s %7s\n\n", 
 			s_maj_fault, s_min_fault, s_d_maj_fault, s_d_min_fault);
 	}
 
@@ -1126,7 +1117,9 @@ static int fault_dump_diff(
 	int64_t	t_min_fault = 0, t_maj_fault = 0;
 	int64_t	t_d_min_fault = 0, t_d_maj_fault = 0;
 	const int pid_size = pid_max_digits();
-	char s_min_fault[12], s_maj_fault[12], s_d_min_fault[12], s_d_maj_fault[12];
+	char s_min_fault[12], s_maj_fault[12],
+	     s_d_min_fault[12], s_d_maj_fault[12],
+	     s_vm_swap[12];
 
 	for (fault_info = fault_info_new; fault_info; fault_info = fault_info->next) {
 		fault_delta(fault_info, fault_info_old);
@@ -1174,7 +1167,7 @@ static int fault_dump_diff(
 		fault_info->maj_fault = 0;
 	}
 
-	df.df_printf(" %*.*s   Major    Minor   +Major   +Minor  User       Command\n",
+	df.df_printf(" %*.*s  Major   Minor  +Major  +Minor    Swap  User       Command\n",
 		pid_size, pid_size, "PID");
 	for (fault_info = sorted_deltas; fault_info; ) {
 		const char *cmd = get_cmdline(fault_info);
@@ -1184,10 +1177,13 @@ static int fault_dump_diff(
 		int64_to_str(fault_info->min_fault, s_min_fault, sizeof(s_min_fault));
 		int64_to_str(fault_info->d_maj_fault, s_d_maj_fault, sizeof(s_d_maj_fault));
 		int64_to_str(fault_info->d_min_fault, s_d_min_fault, sizeof(s_d_min_fault));
+		int64_to_str(fault_info->vm_swap, s_vm_swap, sizeof(s_vm_swap));
 
-		df.df_printf(" %*d %8s %8s %8s %8s %-10.10s %s\n",
+		df.df_printf(" %*d %7s %7s %7s %7s %7s %-10.10s %s\n",
 			pid_size, fault_info->pid,
-			s_maj_fault, s_min_fault, s_d_maj_fault, s_d_min_fault,
+			s_maj_fault, s_min_fault,
+			s_d_maj_fault, s_d_min_fault,
+			s_vm_swap,
 			uname_name(fault_info->uname), cmd);
 
 		fault_info->d_next = NULL;	/* Nullify for next round */
@@ -1198,7 +1194,7 @@ static int fault_dump_diff(
 	int64_to_str(t_min_fault, s_min_fault, sizeof(s_min_fault));
 	int64_to_str(t_d_maj_fault, s_d_maj_fault, sizeof(s_d_maj_fault));
 	int64_to_str(t_d_min_fault, s_d_min_fault, sizeof(s_d_min_fault));
-	df.df_printf("Total: %8s %8s %8s %8s\n\n", 
+	df.df_printf("Total: %7s %7s %7s %7s\n\n", 
 		s_maj_fault, s_min_fault, s_d_maj_fault, s_d_min_fault);
 
 	return 0;
