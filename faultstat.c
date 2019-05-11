@@ -1058,7 +1058,7 @@ static int fault_dump(
 	} else {
 		df.df_printf(" %*.*s  Major   Minor  +Major  +Minor    Swap  %sUser       Command\n",
 			pid_size, pid_size, "PID",
-			opt_flags & OPT_ARROW ? "D " : "");
+			(opt_flags & OPT_ARROW) ? "D " : "");
 	}
 
 	for (fault_info = sorted; fault_info; fault_info = fault_info->s_next) {
@@ -1085,7 +1085,7 @@ static int fault_dump(
 				s_d_maj_fault, s_d_min_fault,
 				s_vm_swap,
 				one_shot ? " " :
-				opt_flags & OPT_ARROW ? arrow : "",
+				(opt_flags & OPT_ARROW) ? arrow : "",
 				uname_name(fault_info->uname), cmd);
 		}
 	}
