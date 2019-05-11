@@ -430,22 +430,24 @@ static inline unsigned int OPTIMIZE3 HOT count_bits(const unsigned int val)
  */
 static void int64_to_str(int64_t val, char *buf, const size_t buflen)
 {
-	double s, v = (double)val;
+	double s;
+	const double v = (double)val;
+	int64_t abs_val = val < 0 ? -val : val;
 	char unit;
 
 	(void)memset(buf, 0, buflen);
 
-	if (v < 10.0 * 1024.0) {
-		s = (double)val;
+	if (abs_val < 10 * 1000) {
+		s = v;
 		unit = ' ';
-	} else if (v < 10.0 * 1000000.0) {
-		s = (double)val / 1000.0;
+	} else if (abs_val < 10000000LL) {
+		s = v / 1000.0;
 		unit = 'k';
-	} else if (v < 10.0 * 1000000000.0) {
-		s = (double)val / (1000000.0);
+	} else if (abs_val < 10000000000LL) {
+		s = v / 1000000.0;
 		unit = 'M';
 	} else {
-		s = (double)val / (1000000000.0);
+		s = v / 1000000000.0;
 		unit = 'G';
 	}
 	(void)snprintf(buf, buflen, "%8.1f%c", s, unit);
