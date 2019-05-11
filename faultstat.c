@@ -47,14 +47,14 @@
 #define UNAME_HASH_TABLE_SIZE	(521)
 #define PROC_HASH_TABLE_SIZE 	(503)
 
-#define OPT_CMD_SHORT		(0x00000002)
-#define OPT_CMD_LONG		(0x00000004)
-#define OPT_CMD_COMM		(0x00000008)
+#define OPT_CMD_SHORT		(0x00000001)
+#define OPT_CMD_LONG		(0x00000002)
+#define OPT_CMD_COMM		(0x00000004)
 #define OPT_CMD_ALL		(OPT_CMD_SHORT | OPT_CMD_LONG | OPT_CMD_COMM)
-#define OPT_DIRNAME_STRIP	(0x00000010)
-#define OPT_TOP			(0x00000100)
-#define OPT_TOP_TOTAL		(0x00000200)
-#define OPT_ARROW		(0x00000400)
+#define OPT_DIRNAME_STRIP	(0x00000008)
+#define OPT_TOP			(0x00000010)
+#define OPT_TOP_TOTAL		(0x00000020)
+#define OPT_ARROW		(0x00000040)
 
 /* process specific information */
 typedef struct proc_info {
