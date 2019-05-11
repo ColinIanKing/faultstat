@@ -1,0 +1,88 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH FAULTSTAT 8 "May 11, 2019"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+faultstat \- report page faults
+.br
+
+.SH SYNOPSIS
+.B faultstat
+[options]
+.RI [ delay " [" count ]]
+.br
+
+.SH DESCRIPTION
+faultstat reports the major and minor page fault activity of processes.
+
+If a delay and count are not specified, a snapshot of the current page fault
+activity is displayed.
+
+If a delay in seconds is specified, faultstat will periodically show any
+per-process page fault changes.  This will run indefinitely until a SIGINT
+is caught.   Specifying count will repeat the periodic output count number
+of times.
+
+.SH OPTIONS
+faultstat options are as follow:
+.TP
+.B \-a
+show page fault size changes with up arrow \[u2191] when they increment
+.TP
+.B \-c
+get command information from processes comm field
+.TP
+.B \-d
+strip directory basename off command information
+.TP
+.B \-h
+show help
+.TP
+.B \-l
+show long (full) command information
+.TP
+.B \-p proclist
+specify a comma separated list of processes to monitor; the
+process list may contain one or more PIDs or process names
+.TP
+.B \-s
+show short command information
+.TP
+.B \-t
+top mode, show top page faulting processes by current page fault changes
+.TP
+.B \-T
+top mode, show top page faulting processes by total page faults
+.PP
+When running in 'top mode', pressing 'q' will quit, 'a' toggles the page fault 
+change arrow, 't' toggles the top page faultering process view.
+.SH SEE ALSO
+.BR cpustat (8),
+.BR eventstat (8),
+.BR forkstat (8),
+.BR smemstat (8),
+.BR top (1),
+.BR vmstat (8)
+.SH AUTHOR
+faultstat was written by Colin King <colin.king@canonical.com>
+.PP
+This manual page was written by Colin King <colin.king@canonical.com>,
+for the Ubuntu project (but may be used by others).
+.SH COPYRIGHT
+Copyright \(co 2014-2019 Canonical Ltd.
+.br
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
