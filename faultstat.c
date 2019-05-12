@@ -374,6 +374,7 @@ static void faultstat_top_printf(const char *fmt, ...)
 	va_list ap;
 	char buf[256];
 	int sz = sizeof(buf) - 1;
+	char *ptr;
 
 	if (cury >= rows)
 		return;
@@ -385,6 +386,11 @@ static void faultstat_top_printf(const char *fmt, ...)
 	(void)vsnprintf(buf, sizeof(buf), fmt, ap);
 	buf[sz] = '\0';
 	(void)printw(buf);
+
+	for (ptr = buf; *ptr; ptr++)
+		if (*ptr == '\n')
+			cury++;
+	
 	va_end(ap);
 }
 
