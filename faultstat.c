@@ -56,6 +56,28 @@
 #define OPT_TOP_TOTAL		(0x00000020)
 #define OPT_ARROW		(0x00000040)
 
+#define SORT_MAJOR_MINOR	(0x00)
+#define SORT_MAJOR		(0x01)
+#define SORT_MINOR		(0x02)
+#define SORT_D_MAJOR_MINOR	(0x03)
+#define SORT_D_MAJOR		(0x04)
+#define SORT_D_MINOR		(0x05)
+#define SORT_SWAP		(0x06)
+#define SORT_END		(0x07)
+
+#define ATTR_MAJOR		(0x00)
+#define ATTR_MINOR		(0x01)
+#define ATTR_D_MAJOR		(0x02)
+#define ATTR_D_MINOR		(0x03)
+#define ATTR_SWAP		(0x04)
+#define ATTR_MAX		(0x05)
+
+#define SIZEOF_ARRAY(a)		(sizeof(a) / sizeof(a[0]))
+
+typedef struct {
+	bool	attr[ATTR_MAX];
+} attr_vals_t;
+
 /* process specific information */
 typedef struct proc_info {
 	struct proc_info *next;		/* next in hash */
@@ -103,6 +125,7 @@ typedef struct {
 	void (*df_refresh)(void);	/* display refresh */
 	void (*df_winsize)(const bool redo);	/* display get size */
 	void (*df_printf)(const char *str, ...) __attribute__((format(printf, 1, 2)));
+	void (*df_attrset)(const int attr);	/* display attribute */
 } display_funcs_t;
 
 static uname_cache_t *uname_cache[UNAME_HASH_TABLE_SIZE];
@@ -118,12 +141,27 @@ static bool resized;			/* true when SIGWINCH occurs */
 static int rows = 25;			/* display rows */
 static int cols = 80;			/* display columns */
 static int cury = 0;			/* current display y position */
+static int sort_by = SORT_MAJOR_MINOR;	/* sort order */
 
 static void faultstat_top_printf(const char *fmt, ...) \
 	__attribute__((format(printf, 1, 2)));
 
 static void faultstat_normal_printf(const char *fmt, ...) \
 	__attribute__((format(printf, 1, 2)));
+
+/*
+ *  sort_by to column attribute highlighting mappings
+ */
+static const attr_vals_t attr_vals[] = {
+	/*  Major  Minor  dMajor dMinor Swap */
+	{ { true,  true,  false, false, false } },
+	{ { true,  false, false, false, false } },
+	{ { false, true,  false, false, false } },
+	{ { false, false, true,  true,  false } },
+	{ { false, false, true,  false, false } },
+	{ { false, false, false, true,  false } },
+	{ { false, false, false, false, true  } },
+};
 
 /*
  *  Attempt to catch a range of signals so
@@ -213,6 +251,17 @@ ret:
 	return max_digits;
 
 }
+
+static int getattr(const int attr)
+{
+	if (sort_by < 0 || sort_by >= SORT_END)
+		return A_NORMAL;
+	if (attr < 0 || attr >= ATTR_MAX)
+		return A_NORMAL;
+
+	return attr_vals[sort_by].attr[attr] ? A_UNDERLINE : A_NORMAL;
+}
+
 
 /*
  *  handle_sigwinch()
@@ -329,9 +378,8 @@ static void faultstat_top_printf(const char *fmt, ...)
 	va_start(ap, fmt);
 	(void)vsnprintf(buf, sizeof(buf), fmt, ap);
 	buf[sz] = '\0';
-	(void)mvprintw(cury, 0, buf);
+	(void)printw(buf);
 	va_end(ap);
-	cury++;
 }
 
 /*
@@ -349,6 +397,16 @@ static void faultstat_normal_printf(const char *fmt, ...)
 	va_end(ap);
 }
 
+static void faultstat_top_attrset(const int attr)
+{
+	attrset(attr);
+}
+
+static void faultstat_normal_attrset(const int attr)
+{
+	(void)attr;
+}
+
 /* ncurses based "top" mode display functions */
 static const display_funcs_t df_top = {
 	faultstat_top_setup,
@@ -357,6 +415,7 @@ static const display_funcs_t df_top = {
 	faultstat_top_refresh,
 	faultstat_top_winsize,
 	faultstat_top_printf,
+	faultstat_top_attrset,
 };
 
 /* normal tty mode display functions */
@@ -367,6 +426,7 @@ static const display_funcs_t df_normal = {
 	faultstat_noop,
 	faultstat_generic_winsize,
 	faultstat_normal_printf,
+	faultstat_normal_attrset,
 };
 
 /*
@@ -990,6 +1050,70 @@ static inline char *get_cmdline(const fault_info_t * const fault_info)
 	return "<unknown>";
 }
 
+static bool compare(fault_info_t *f1, fault_info_t *f2)
+{
+	switch (sort_by) {
+	case SORT_MAJOR_MINOR:
+		return f1->min_fault + f1->maj_fault <
+		       f2->min_fault + f2->maj_fault;
+		break;
+	case SORT_MAJOR:
+		return f1->maj_fault < f2->maj_fault;
+		break;
+	case SORT_MINOR:
+		return f1->min_fault < f2->min_fault;
+		break;
+	case SORT_D_MAJOR_MINOR:
+		return f1->min_fault + f1->maj_fault <
+		       f2->min_fault + f2->maj_fault;
+		break;
+	case SORT_D_MAJOR:
+		return f1->d_maj_fault < f2->d_maj_fault;
+		break;
+	case SORT_D_MINOR:
+		return f1->d_min_fault < f2->d_min_fault;
+		break;
+	case SORT_SWAP:
+		return f1->vm_swap < f2->vm_swap;
+		break;
+	default:
+		break;
+	}
+	return true;
+}
+
+static void fault_heading(const bool one_shot, const int pid_size)
+{
+	if (one_shot) {
+		df.df_printf(" %*.*s  Major   Minor    Swap  User       Command\n",
+			pid_size, pid_size, "PID");
+	} else {
+		df.df_attrset(A_BOLD);
+		df.df_printf(" %*.*s  ", pid_size, pid_size, "PID");
+		df.df_attrset(getattr(ATTR_MAJOR) | A_BOLD);
+		df.df_printf("Major");
+		df.df_attrset(A_NORMAL);
+		df.df_printf("   ");
+		df.df_attrset(getattr(ATTR_MINOR) | A_BOLD);
+		df.df_printf("Minor");
+		df.df_attrset(A_NORMAL);
+		df.df_printf("  ");
+		df.df_attrset(getattr(ATTR_D_MAJOR) | A_BOLD);
+		df.df_printf("+Major");
+		df.df_attrset(A_NORMAL);
+		df.df_printf("  ");
+		df.df_attrset(getattr(ATTR_D_MINOR) | A_BOLD);
+		df.df_printf("+Major");
+		df.df_attrset(A_NORMAL);
+		df.df_printf("    ");
+		df.df_attrset(getattr(ATTR_SWAP) | A_BOLD);
+		df.df_printf("Swap");
+		df.df_attrset(A_BOLD);
+		df.df_printf("  %sUser       Command\n", (opt_flags & OPT_ARROW) ? "D " : "");
+		df.df_attrset(A_NORMAL);
+	}
+}
+
 /*
  *  fault_dump()
  *	dump out page fault usage
@@ -1011,7 +1135,7 @@ static int fault_dump(
 	for (fault_info = fault_info_new; fault_info; fault_info = fault_info->next) {
 		fault_delta(fault_info, fault_info_old);
 		for (l = &sorted; *l; l = &(*l)->s_next) {
-			if ((*l)->d_min_fault + (*l)->d_maj_fault < fault_info->d_min_fault + fault_info->d_maj_fault) {
+			if (compare(*l, fault_info)) {
 				fault_info->s_next = (*l);
 				break;
 			}
@@ -1031,7 +1155,7 @@ static int fault_dump(
 
 		/* Process has died, so include it as -ve delta */
 		for (l = &sorted; *l; l = &(*l)->d_next) {
-			if ((*l)->d_min_fault + (*l)->d_maj_fault < fault_info->d_min_fault + fault_info->d_maj_fault) {
+			if (compare(*l, fault_info)) {
 				fault_info->d_next = (*l);
 				break;
 			}
@@ -1051,15 +1175,7 @@ static int fault_dump(
 		fault_info->maj_fault = 0;
 	}
 
-	if (one_shot) {
-		df.df_printf(" %*.*s  Major   Minor    Swap  User       Command\n",
-			pid_size, pid_size, "PID");
-	} else {
-		df.df_printf(" %*.*s  Major   Minor  +Major  +Minor    Swap  %sUser       Command\n",
-			pid_size, pid_size, "PID",
-			(opt_flags & OPT_ARROW) ? "D " : "");
-	}
-
+	fault_heading(one_shot, pid_size);
 	for (fault_info = sorted; fault_info; fault_info = fault_info->s_next) {
 		const char *cmd = get_cmdline(fault_info);
 
@@ -1126,7 +1242,7 @@ static int fault_dump_diff(
 			continue;
 
 		for (l = &sorted_deltas; *l; l = &(*l)->d_next) {
-			if ((*l)->d_min_fault + (*l)->d_maj_fault < fault_info->d_min_fault + fault_info->d_maj_fault) {
+			if (compare(*l, fault_info)) {
 				fault_info->d_next = (*l);
 				break;
 			}
@@ -1146,7 +1262,7 @@ static int fault_dump_diff(
 
 		/* Process has died, so include it as -ve delta */
 		for (l = &sorted_deltas; *l; l = &(*l)->d_next) {
-			if ((*l)->d_min_fault + (*l)->d_maj_fault < fault_info->d_min_fault + fault_info->d_maj_fault) {
+			if (compare(*l, fault_info)) {
 				fault_info->d_next = (*l);
 				break;
 			}
@@ -1166,8 +1282,7 @@ static int fault_dump_diff(
 		fault_info->maj_fault = 0;
 	}
 
-	df.df_printf(" %*.*s  Major   Minor  +Major  +Minor    Swap  User       Command\n",
-		pid_size, pid_size, "PID");
+	fault_heading(false, pid_size);
 	for (fault_info = sorted_deltas; fault_info; ) {
 		const char *cmd = get_cmdline(fault_info);
 		fault_info_t *next = fault_info->d_next;
@@ -1507,6 +1622,10 @@ retry:
 					case 't':
 						opt_flags ^= OPT_TOP_TOTAL;
 						break;
+					case 's':
+						sort_by++;
+						if (sort_by >= SORT_END)
+							sort_by = SORT_MAJOR_MINOR;
 					}
 				}
 			}

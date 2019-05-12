@@ -15,6 +15,7 @@
 .\" .br        insert line break
 .\" .sp <n>    insert n+1 empty lines
 .\" for manpage-specific macros, see man(7)
+.nr SZ ((\n[.l] - \n[.i]) / 1n - 31)
 .SH NAME
 faultstat \- report page faults
 .br
@@ -67,8 +68,18 @@ top mode, show top page faulting processes by current page fault changes
 .B \-T
 top mode, show top page faulting processes by total page faults
 .PP
-When running in 'top mode', pressing 'q' will quit, 'a' toggles the page fault 
-change arrow, 't' toggles the top page faultering process view.
+Hot keys in top mode:
+.TS
+lB lBw(\n[SZ]n)
+l l.
+Key	Operation
+a	Toggle page fault change arrow on or off
+s	T{
+Switch sorting order: Major and Minor, Major, Minor, +Major and +Minor, +Major,
++Minor, Swap
+T}
+q	Quit
+.TE
 .SH SEE ALSO
 .BR cpustat (8),
 .BR eventstat (8),
