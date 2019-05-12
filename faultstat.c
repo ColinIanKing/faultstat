@@ -1103,7 +1103,7 @@ static void fault_heading(const bool one_shot, const int pid_size)
 		df.df_attrset(A_NORMAL);
 		df.df_printf("  ");
 		df.df_attrset(getattr(ATTR_D_MINOR) | A_BOLD);
-		df.df_printf("+Major");
+		df.df_printf("+Minor");
 		df.df_attrset(A_NORMAL);
 		df.df_printf("    ");
 		df.df_attrset(getattr(ATTR_SWAP) | A_BOLD);
