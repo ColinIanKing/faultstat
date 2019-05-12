@@ -1064,8 +1064,8 @@ static bool compare(fault_info_t *f1, fault_info_t *f2)
 		return f1->min_fault < f2->min_fault;
 		break;
 	case SORT_D_MAJOR_MINOR:
-		return f1->min_fault + f1->maj_fault <
-		       f2->min_fault + f2->maj_fault;
+		return f1->d_min_fault + f1->d_maj_fault <
+		       f2->d_min_fault + f2->d_maj_fault;
 		break;
 	case SORT_D_MAJOR:
 		return f1->d_maj_fault < f2->d_maj_fault;
