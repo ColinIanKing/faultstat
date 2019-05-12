@@ -366,7 +366,7 @@ static void faultstat_top_winsize(const bool redo)
 }
 
 /*
- *  faultstat_top_printf
+ *  faultstat_top_printf()
  *	print text to display width in top mode
  */
 static void faultstat_top_printf(const char *fmt, ...)
@@ -389,7 +389,7 @@ static void faultstat_top_printf(const char *fmt, ...)
 }
 
 /*
- *  faultstat_normal_printf
+ *  faultstat_normal_printf()
  *	normal tty printf
  */
 static void faultstat_normal_printf(const char *fmt, ...)
@@ -403,11 +403,19 @@ static void faultstat_normal_printf(const char *fmt, ...)
 	va_end(ap);
 }
 
+/*
+ *  faultstat_top_attrset()
+ *	set attributes for ncurses top mode
+ */
 static void faultstat_top_attrset(const int attr)
 {
 	attrset(attr);
 }
 
+/*
+ *  faultstat_normal_attrset
+ *	set attribites for tty printf (ignored)
+ */
 static void faultstat_normal_attrset(const int attr)
 {
 	(void)attr;
@@ -742,6 +750,10 @@ static double gettime_to_double(void)
 	return timeval_to_double(&tv);
 }
 
+/*
+ *  hash_uid()
+ *	hash a uid
+ */
 static inline unsigned long hash_uid(const uid_t uid)
 {
         const unsigned long h = (unsigned long)uid;
@@ -1056,6 +1068,10 @@ static inline char *get_cmdline(const fault_info_t * const fault_info)
 	return "<unknown>";
 }
 
+/*
+ *  compare()
+ *	sort comparison based on sort_by setting
+ */
 static bool compare(fault_info_t *f1, fault_info_t *f2)
 {
 	switch (sort_by) {
@@ -1088,6 +1104,10 @@ static bool compare(fault_info_t *f1, fault_info_t *f2)
 	return true;
 }
 
+/*
+ *  fault_heading()
+ *	output heading
+ */
 static void fault_heading(const bool one_shot, const int pid_size)
 {
 	if (one_shot) {
