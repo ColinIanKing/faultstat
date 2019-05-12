@@ -154,13 +154,13 @@ static void faultstat_normal_printf(const char *fmt, ...) \
  */
 static const attr_vals_t attr_vals[] = {
 	/*  Major  Minor  dMajor dMinor Swap */
-	{ { true,  true,  false, false, false } },
-	{ { true,  false, false, false, false } },
-	{ { false, true,  false, false, false } },
-	{ { false, false, true,  true,  false } },
-	{ { false, false, true,  false, false } },
-	{ { false, false, false, true,  false } },
-	{ { false, false, false, false, true  } },
+	{ { true,  true,  false, false, false } }, /* SORT_MAJOR_MINOR */
+	{ { true,  false, false, false, false } }, /* SORT_MAJOR */
+	{ { false, true,  false, false, false } }, /* SORT_MINOR */
+	{ { false, false, true,  true,  false } }, /* SORT_D_MAJOR_MINOR */
+	{ { false, false, true,  false, false } }, /* SORT_D_MAJOR */
+	{ { false, false, false, true,  false } }, /* SORT_D_MINOR */
+	{ { false, false, false, false, true  } }, /* SORT_SWAP */
 };
 
 /*
@@ -252,14 +252,20 @@ ret:
 
 }
 
-static int getattr(const int attr)
+/*
+ *  getattr()
+ *	get attribute for a specific column, index
+ *	is the index into the attr fields that maps
+ *	to a specific column.
+ */
+static int getattr(const int index)
 {
 	if (sort_by < 0 || sort_by >= SORT_END)
 		return A_NORMAL;
-	if (attr < 0 || attr >= ATTR_MAX)
+	if (index < 0 || index >= ATTR_MAX)
 		return A_NORMAL;
 
-	return attr_vals[sort_by].attr[attr] ? A_UNDERLINE : A_NORMAL;
+	return attr_vals[sort_by].attr[index] ? A_UNDERLINE : A_NORMAL;
 }
 
 
