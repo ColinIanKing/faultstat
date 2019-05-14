@@ -1,0 +1,28 @@
+name: faultstat
+version: 0.01-20191405
+summary: tool to measure page faults
+description: faultstat measures page fault activity and swap utilization of processes
+confinement: strict
+grade: stable
+type: app
+
+environment:
+    CFLAGS: '-fstack-protector-strong -Wformat -Werror=format-security'
+    LDFLAGS: Wl,-z,relro
+
+parts:
+    faultstat:
+        plugin: make
+        source: git://github.com/ColinIanKing/faultstat
+        build-packages:
+            - gcc
+            - make
+            - libncurses-dev
+            - libncursesw5-dev
+        stage-packages:
+            - libncurses-dev
+            - libncursesw5-dev
+apps:
+    faultstat:
+        plugs: [ home, system-observe, hardware-observe ]
+        command: usr/bin/faultstat
