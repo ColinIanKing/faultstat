@@ -45,8 +45,8 @@ faultstat.8.gz: faultstat.8
 dist:
 	rm -rf faultstat-$(VERSION)
 	mkdir faultstat-$(VERSION)
-	cp -rp Makefile faultstat.c faultstat.8 COPYING README scripts \
-		snapcraft .travis.yml faultstat-$(VERSION)
+	cp -rp Makefile faultstat.c faultstat.8 COPYING \
+		snapcraft.yaml .travis.yml faultstat-$(VERSION)
 	tar -Jcf faultstat-$(VERSION).tar.xz faultstat-$(VERSION)
 	rm -rf faultstat-$(VERSION)
 
