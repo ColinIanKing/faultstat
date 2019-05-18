@@ -1,0 +1,15 @@
+Source: faultstat
+Section: admin
+Priority: optional
+Maintainer: Colin King <colin.king@canonical.com>
+Standards-Version: 4.1.2
+Build-Depends: debhelper (>= 11), libncurses-dev, libncursesw5-dev
+Homepage: http://kernel.ubuntu.com/~cking/faultstat
+
+Package: faultstat
+Architecture: linux-any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: page fault monitoring tool
+ Faultstat reports the page fault activity of processes
+ running on a syste. The tool supports a 'top' like mode
+ to dynamically display the top page faulting processes.
