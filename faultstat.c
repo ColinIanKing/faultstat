@@ -955,8 +955,10 @@ static int fault_get_by_proc(const pid_t pid, fault_info_t ** const fault_info)
 		return -1;
 
 	(void)snprintf(path, sizeof(path), "/proc/%i/stat", pid);
-	if ((fp = fopen(path, "r")) == NULL)
+	if ((fp = fopen(path, "r")) == NULL) {
+		fault_cache_free(new_fault_info);
 		return -1;	/* Gone? */
+	}
 	n = fscanf(fp, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %lu %*u %lu",
 		&min_fault, &maj_fault);
 	if (n == 2) {
@@ -1231,7 +1233,6 @@ static int fault_dump(
 				s_maj_fault, s_min_fault,
 				s_d_maj_fault, s_d_min_fault,
 				s_vm_swap,
-				one_shot ? " " :
 				(opt_flags & OPT_ARROW) ? arrow : "",
 				uname_name(fault_info->uname), cmd);
 		}
