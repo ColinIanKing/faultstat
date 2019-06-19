@@ -390,7 +390,6 @@ static void faultstat_top_printf(const char *fmt, ...)
 	for (ptr = buf; *ptr; ptr++)
 		if (*ptr == '\n')
 			cury++;
-	
 	va_end(ap);
 }
 
@@ -1245,7 +1244,7 @@ static int fault_dump(
 	} else {
 		int64_to_str(t_d_maj_fault, s_d_maj_fault, sizeof(s_d_maj_fault));
 		int64_to_str(t_d_min_fault, s_d_min_fault, sizeof(s_d_min_fault));
-		df.df_printf("Total: %7s %7s %7s %7s\n\n", 
+		df.df_printf("Total: %7s %7s %7s %7s\n\n",
 			s_maj_fault, s_min_fault, s_d_maj_fault, s_d_min_fault);
 	}
 
@@ -1341,7 +1340,7 @@ static int fault_dump_diff(
 	int64_to_str(t_min_fault, s_min_fault, sizeof(s_min_fault));
 	int64_to_str(t_d_maj_fault, s_d_maj_fault, sizeof(s_d_maj_fault));
 	int64_to_str(t_d_min_fault, s_d_min_fault, sizeof(s_d_min_fault));
-	df.df_printf("Total: %7s %7s %7s %7s\n\n", 
+	df.df_printf("Total: %7s %7s %7s %7s\n\n",
 		s_maj_fault, s_min_fault, s_d_maj_fault, s_d_min_fault);
 
 	return 0;
