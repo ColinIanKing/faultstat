@@ -1,5 +1,6 @@
 faultstat (0.01.01-1) unstable; urgency=medium
 
+  * Initial release into Debian (Closes: #932744)
   * Makefile: bump version
   * Make -p more intellegent so we can compare names without the args
   * Fix memory leak when OPT_CMD_COMM is set and p->cmdline is already allocated
