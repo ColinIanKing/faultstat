@@ -1,3 +1,14 @@
+faultstat (0.01.01-1) unstable; urgency=medium
+
+  * Makefile: bump version
+  * Make -p more intellegent so we can compare names without the args
+  * Fix memory leak when OPT_CMD_COMM is set and p->cmdline is already allocated
+  * Remove some whitespace
+  * Free new_fault_info and remove some dead code
+  * Add travis file and update make dist rule
+
+ -- Colin King <colin.king@canonical.com>  Mon, 22 Jul 2019 17:16:15 +0100
+
 faultstat (0.01.00-1) unstable; urgency=medium
 
   * Initial release
