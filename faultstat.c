@@ -505,6 +505,25 @@ static inline unsigned int OPTIMIZE3 HOT count_bits(const unsigned int val)
 #endif
 
 /*
+ *  procnamecmp()
+ *	compare process names upto the end of string or ' '
+ */
+static int procnamecmp(const char *s1, const char *s2)
+{
+	register char c1, c2;
+
+	do {	
+		c1 = (unsigned char)*s1++;
+		c2 = (unsigned char)*s2++;
+
+		if (c1 == 0 || c1 == ' ')
+			return 0;
+	} while (c1 == c2);
+
+	return c1 - c2;
+}
+
+/*
  *  int64_to_str()
  *	report int64 values in different units
  */
@@ -941,13 +960,19 @@ static int fault_get_by_proc(const pid_t pid, fault_info_t ** const fault_info)
 
 	if (pids) {
 		pid_list_t *p;
-		char *tmp = basename(proc->cmdline);
 
 		for (p = pids; p; p = p->next) {
 			if (p->pid == pid)
 				break;
-			if (p->name && strcmp(p->name, tmp) == 0)
-				break;
+			if (p->name) {
+				char *tmp_cmdline = proc->cmdline;
+
+				if (strchr(p->name, '/') == NULL)
+					tmp_cmdline = basename(proc->cmdline);
+
+			 	if (tmp_cmdline && procnamecmp(p->name, tmp_cmdline) == 0)
+					break;
+			}
 		}
 		if (!p)
 			return 0;
