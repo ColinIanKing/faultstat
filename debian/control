@@ -11,5 +11,5 @@ Architecture: linux-any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: page fault monitoring tool
  Faultstat reports the page fault activity of processes
- running on a syste. The tool supports a 'top' like mode
+ running on a system. The tool supports a 'top' like mode
  to dynamically display the top page faulting processes.
