@@ -1,5 +1,7 @@
 name: faultstat
-version: 0.01-20191405
+version: git
+version-script: |
+    echo $(git describe --tags)
 summary: tool to measure page faults
 description: faultstat measures page fault activity and swap utilization of processes
 confinement: strict
