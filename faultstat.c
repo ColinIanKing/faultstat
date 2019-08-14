@@ -1241,8 +1241,12 @@ static int fault_dump(
 		const char *cmd = get_cmdline(fault_info);
 
 		int64_t delta = fault_info->d_min_fault + fault_info->d_maj_fault;
+#if 0
 		const char * const arrow = (delta < 0) ? "\u2193 " :
 						  ((delta > 0) ? "\u2191 "  : "  ");
+#endif
+		const char * const arrow = (delta < 0) ? "v" :
+						  ((delta > 0) ? "^ "  : "  ");
 
 		int64_to_str(fault_info->maj_fault, s_maj_fault, sizeof(s_maj_fault));
 		int64_to_str(fault_info->min_fault, s_min_fault, sizeof(s_min_fault));
