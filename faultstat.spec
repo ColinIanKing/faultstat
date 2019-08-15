@@ -1,4 +1,4 @@
-%define version 0.01.01
+%define version 0.01.02
 %define debug_package %{nil}
 
 Name:           faultstat
