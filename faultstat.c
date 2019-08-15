@@ -1058,10 +1058,8 @@ static int fault_get_all_pids(fault_info_t ** const fault_info, size_t * const n
 			continue;
 		pid = (pid_t)strtoul(entry->d_name, NULL, 10);
 
-		if (fault_get_by_proc(pid, fault_info) < 0) {
-			(void)closedir(dir);
-			return -1;
-		}
+		if (fault_get_by_proc(pid, fault_info) < 0)
+			continue;
 		(*npids)++;
 	}
 

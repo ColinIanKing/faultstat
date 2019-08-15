@@ -39,3 +39,4 @@ install -m 0755 %{name}.8 %{buildroot}/%{_mandir}/man8/%{name}.8
 %changelog
 * Wed Aug 14 2019 <imilos@gmail.com> 0.01.01
 - Initial release to Fedora Copr
+

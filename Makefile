@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
-VERSION=0.01.01
+VERSION=0.01.02
 #
 
 CFLAGS += -Wall -Wextra -DVERSION='"$(VERSION)"' -O2
@@ -45,7 +45,7 @@ faultstat.8.gz: faultstat.8
 dist:
 	rm -rf faultstat-$(VERSION)
 	mkdir faultstat-$(VERSION)
-	cp -rp Makefile faultstat.c faultstat.8 COPYING \
+	cp -rp Makefile faultstat.c faultstat.8 COPYING faultstat.spec \
 		snapcraft.yaml .travis.yml faultstat-$(VERSION)
 	tar -Jcf faultstat-$(VERSION).tar.xz faultstat-$(VERSION)
 	rm -rf faultstat-$(VERSION)

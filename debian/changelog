@@ -1,3 +1,15 @@
+faultstat (0.01.02-1) unstable; urgency=medium
+
+  * Makefile: bump version
+  * Debian: update compat level to 12
+  * Makefile: add faultstat.spec to make dist rule
+  * Don't prematurely abort if we can't access a reaped dead process
+  * Add RHEL spec file
+  * Use normal ^ and v for arrows rather than fancy unicode
+  * snapcraft: add autoversioning
+
+ -- Colin King <colin.king@canonical.com>  Wed, 14 Aug 2019 17:33:11 +0100
+
 faultstat (0.01.01-1) unstable; urgency=medium
 
   * Initial release into Debian (Closes: #932744)
