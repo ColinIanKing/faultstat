@@ -33,6 +33,7 @@ endif
 
 BINDIR=/usr/bin
 MANDIR=/usr/share/man/man8
+BASHDIR=/usr/share/bash-completion/completions
 
 OBJS = faultstat.o 
 
@@ -46,7 +47,7 @@ dist:
 	rm -rf faultstat-$(VERSION)
 	mkdir faultstat-$(VERSION)
 	cp -rp Makefile faultstat.c faultstat.8 COPYING faultstat.spec \
-		snapcraft.yaml .travis.yml faultstat-$(VERSION)
+		snapcraft.yaml .travis.yml bash-completion faultstat-$(VERSION)
 	tar -Jcf faultstat-$(VERSION).tar.xz faultstat-$(VERSION)
 	rm -rf faultstat-$(VERSION)
 
@@ -60,3 +61,5 @@ install: faultstat faultstat.8.gz
 	cp faultstat ${DESTDIR}${BINDIR}
 	mkdir -p ${DESTDIR}${MANDIR}
 	cp faultstat.8.gz ${DESTDIR}${MANDIR}
+	mkdir -p ${DESTDIR}${BASHDIR}
+	cp bash-completion/faultstat ${DESTDIR}${BASHDIR}
