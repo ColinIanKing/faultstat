@@ -1270,12 +1270,12 @@ static int fault_dump(
 	int64_to_str(t_maj_fault, s_maj_fault, sizeof(s_maj_fault));
 	int64_to_str(t_min_fault, s_min_fault, sizeof(s_min_fault));
 	if (one_shot) {
-		df.df_printf("Total: %7s %7s\n\n", s_maj_fault, s_min_fault);
+		df.df_printf(" %*s %7s %7s\n\n", pid_size, "Total:", s_maj_fault, s_min_fault);
 	} else {
 		int64_to_str(t_d_maj_fault, s_d_maj_fault, sizeof(s_d_maj_fault));
 		int64_to_str(t_d_min_fault, s_d_min_fault, sizeof(s_d_min_fault));
-		df.df_printf("Total: %7s %7s %7s %7s\n\n",
-			s_maj_fault, s_min_fault, s_d_maj_fault, s_d_min_fault);
+		df.df_printf(" %*s %7s %7s %7s %7s\n\n",
+			pid_size, "Total:", s_maj_fault, s_min_fault, s_d_maj_fault, s_d_min_fault);
 	}
 
 	return 0;
@@ -1370,8 +1370,8 @@ static int fault_dump_diff(
 	int64_to_str(t_min_fault, s_min_fault, sizeof(s_min_fault));
 	int64_to_str(t_d_maj_fault, s_d_maj_fault, sizeof(s_d_maj_fault));
 	int64_to_str(t_d_min_fault, s_d_min_fault, sizeof(s_d_min_fault));
-	df.df_printf("Total: %7s %7s %7s %7s\n\n",
-		s_maj_fault, s_min_fault, s_d_maj_fault, s_d_min_fault);
+	df.df_printf(" %*s %7s %7s %7s %7s\n\n",
+		pid_size, "Total:", s_maj_fault, s_min_fault, s_d_maj_fault, s_d_min_fault);
 
 	return 0;
 }
