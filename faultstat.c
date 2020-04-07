@@ -343,6 +343,7 @@ static void faultstat_generic_winsize(const bool redo)
 	if (redo) {
 		struct winsize ws;
 
+		(void)memset(&ws, 0, sizeof(ws));
 		if ((ioctl(fileno(stdin), TIOCGWINSZ, &ws) != -1)) {
 			rows = ws.ws_row;
 			cols = ws.ws_col;
