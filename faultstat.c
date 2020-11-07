@@ -936,6 +936,50 @@ static void fault_cache_cleanup(void)
 }
 
 /*
+ *  get_proc_self_stat_field()
+ *     find nth field of /proc/$PID/stat data. This works around
+ *     the problem that the comm field can contain spaces and
+ *     multiple ) so sscanf on this field won't work.  The returned
+ *     pointer is the start of the Nth field and it is up to the
+ *     caller to determine the end of the field
+ */
+static const char *get_proc_self_stat_field(const char *buf, const int num)
+{
+	const char *ptr = buf, *comm_end;
+	int n;
+
+	if (num < 1 || !buf || !*buf)
+		return NULL;
+	if (num == 1)
+		return buf;
+	if (num == 2)
+		return strstr(buf, "(");
+
+	comm_end = NULL;
+	for (ptr = buf; *ptr; ptr++) {
+		if (*ptr == ')')
+			comm_end = ptr;
+	}
+	if (!comm_end)
+		return NULL;
+	comm_end++;
+	n = num - 2;
+
+	ptr = comm_end;
+	while (*ptr) {
+		while (*ptr && *ptr == ' ')
+			ptr++;
+		n--;
+		if (n <= 0)
+			break;
+		while (*ptr && *ptr != ' ')
+			ptr++;
+	}
+
+	return ptr;
+}
+
+/*
  *  fault_get_by_proc()
  *	get page fault info for a specific proc
  */
@@ -948,6 +992,7 @@ static int fault_get_by_proc(const pid_t pid, fault_info_t ** const fault_info)
 	int n;
 	char buffer[4096];
 	char path[PATH_MAX];
+	const char *ptr;
 	int got_fields = 0;
 
 	if (getpgid(pid) == 0)
@@ -987,13 +1032,21 @@ static int fault_get_by_proc(const pid_t pid, fault_info_t ** const fault_info)
 		fault_cache_free(new_fault_info);
 		return -1;	/* Gone? */
 	}
-	n = fscanf(fp, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %lu %*u %lu",
+	(void)memset(buffer, 0, sizeof(buffer));
+	if (fgets(buffer, sizeof(buffer) - 1, fp) == NULL) {
+		(void)fclose(fp);
+		return -1;
+	}
+	(void)fclose(fp);
+	ptr = get_proc_self_stat_field(buffer, 10);
+	if (!ptr)
+		return -1;
+	n = sscanf(ptr, "%lu %*u %lu",
 		&min_fault, &maj_fault);
 	if (n == 2) {
 		new_fault_info->min_fault = min_fault;
 		new_fault_info->maj_fault = maj_fault;
 	}
-	(void)fclose(fp);
 
 	new_fault_info->pid = pid;
 	new_fault_info->proc = proc_cache_find_by_pid(pid);
