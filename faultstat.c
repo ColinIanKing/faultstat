@@ -1034,13 +1034,16 @@ static int fault_get_by_proc(const pid_t pid, fault_info_t ** const fault_info)
 	}
 	(void)memset(buffer, 0, sizeof(buffer));
 	if (fgets(buffer, sizeof(buffer) - 1, fp) == NULL) {
+		fault_cache_free(new_fault_info);
 		(void)fclose(fp);
 		return -1;
 	}
 	(void)fclose(fp);
 	ptr = get_proc_self_stat_field(buffer, 10);
-	if (!ptr)
+	if (!ptr) {
+		fault_cache_free(new_fault_info);
 		return -1;
+	}
 	n = sscanf(ptr, "%lu %*u %lu",
 		&min_fault, &maj_fault);
 	if (n == 2) {
