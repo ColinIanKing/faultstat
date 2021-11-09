@@ -386,7 +386,7 @@ static void faultstat_top_printf(const char *fmt, ...)
 	va_start(ap, fmt);
 	(void)vsnprintf(buf, sizeof(buf), fmt, ap);
 	buf[sz] = '\0';
-	(void)printw(buf);
+	(void)printw("%s", buf);
 
 	for (ptr = buf; *ptr; ptr++)
 		if (*ptr == '\n')
