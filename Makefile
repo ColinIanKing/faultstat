@@ -1,5 +1,6 @@
 #
 # Copyright (C) 2014-2021 Canonical, Ltd.
+# Copyright (C) 2021 Colin Ian King
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
-VERSION=0.01.06
+VERSION=0.01.07
 #
 
 CFLAGS += -Wall -Wextra -DVERSION='"$(VERSION)"' -O2
@@ -28,7 +29,7 @@ ifeq ($(PEDANTIC),1)
 CFLAGS += -Wabi -Wcast-qual -Wfloat-equal -Wmissing-declarations \
 	-Wmissing-format-attribute -Wno-long-long -Wpacked \
 	-Wredundant-decls -Wshadow -Wno-missing-field-initializers \
-	-Wno-missing-braces -Wno-sign-compare -Wno-multichar
+	-Wno-missing-braces -Wno-sign-compare -Wno-multichar -fanalyzer
 endif
 
 BINDIR=/usr/bin
