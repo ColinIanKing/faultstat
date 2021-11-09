@@ -1,3 +1,16 @@
+faultstat (0.01.07-1) unstable; urgency=medium
+
+  * Makefile: bump version
+  * Makefile: add README.md to make dist rule
+  * debian/watch: refresh to new tarball path on watch file
+  * debian/copyright: add Colin Ian King details
+  * Debian: update control file, new URL and maintainer info
+  * Use "%s" format specifier for printw (Closes: #997155)
+  * README.md: Add one more example
+  * Add README.md
+
+ -- Colin Ian King <colin.i.king@gmail.com>  Tue, 9 Nov 2021 18:06:12 +0000
+
 faultstat (0.01.06-1) unstable; urgency=medium
 
   * Makefile: bump version
