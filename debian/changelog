@@ -1,3 +1,14 @@
+faultstat (0.01.08-1) unstable; urgency=medium
+
+  * Makefile: bump version
+  * Debian/control: update standands version
+  * Debian/copyright: update year
+  * Update copyright and email address
+  * Fix spelling mistake in comment, upto -> up to
+  * faultstat: remove redundant assignment to ptr
+
+ -- Colin Ian King <colin.i.king@gmail.com>  Wed, 30 Nov 2022 15:27:28 +0000
+
 faultstat (0.01.07-1) unstable; urgency=medium
 
   * Makefile: bump version
