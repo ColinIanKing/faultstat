@@ -507,7 +507,7 @@ static inline unsigned int OPTIMIZE3 HOT count_bits(const unsigned int val)
 
 /*
  *  procnamecmp()
- *	compare process names upto the end of string or ' '
+ *	compare process names up to the end of string or ' '
  */
 static int procnamecmp(const char *s1, const char *s2)
 {
