@@ -227,7 +227,7 @@ static int pid_max_digits(void)
 	ssize_t n;
 	int fd;
 	const int default_digits = 6;
-	const int min_digits = 5;
+	const int min_digits = 6;
 	char buf[32];
 
 	if (max_digits)
