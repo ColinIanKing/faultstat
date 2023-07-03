@@ -1163,7 +1163,7 @@ static inline char *get_cmdline(const fault_info_t * const fault_info)
  *  compare()
  *	sort comparison based on sort_by setting
  */
-static bool compare(fault_info_t *f1, fault_info_t *f2)
+static bool compare(const fault_info_t *f1, const fault_info_t *f2)
 {
 	switch (sort_by) {
 	case SORT_MAJOR_MINOR:
