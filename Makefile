@@ -48,7 +48,7 @@ dist:
 	rm -rf faultstat-$(VERSION)
 	mkdir faultstat-$(VERSION)
 	cp -rp Makefile faultstat.c faultstat.8 COPYING faultstat.spec \
-		snapcraft.yaml .travis.yml bash-completion README.md faultstat-$(VERSION)
+		.travis.yml bash-completion README.md faultstat-$(VERSION)
 	tar -Jcf faultstat-$(VERSION).tar.xz faultstat-$(VERSION)
 	rm -rf faultstat-$(VERSION)
 
