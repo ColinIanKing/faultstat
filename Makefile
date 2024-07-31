@@ -32,9 +32,10 @@ CFLAGS += -Wabi -Wcast-qual -Wfloat-equal -Wmissing-declarations \
 	-Wno-missing-braces -Wno-sign-compare -Wno-multichar -fanalyzer
 endif
 
-BINDIR=/usr/bin
-MANDIR=/usr/share/man/man8
-BASHDIR=/usr/share/bash-completion/completions
+PREFIX=/usr
+BINDIR=$(PREFIX)/bin
+MANDIR=$(PREFIX)/share/man/man8
+BASHDIR=$(PREFIX)/share/bash-completion/completions
 
 OBJS = faultstat.o 
 
